@@ -1,0 +1,1458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Texas Birds I Need</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --ink:#20241f;
+    --paper:#f3ede0;
+    --paper-2:#eae2d1;
+    --line:#c9bc9e;
+    --pine:#123f36;
+    --pine-2:#1c5647;
+    --rust:#a8492c;
+    --rust-2:#8a3a22;
+    --muted:#6b6455;
+    --card:#fbf8f0;
+    --need-bg:#fbf8f0;
+    --got-bg:#e4ede4;
+    --tag-review:#4a7c59;
+    --tag-accidental:#a8492c;
+    --tag-presumptive:#6b6455;
+    --tag-introduced:#4a7c59;
+    --tag-historical:#6b6455;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ink:#ece6d8;
+      --paper:#141a16;
+      --paper-2:#1b221d;
+      --line:#3a4238;
+      --pine:#7fb8a4;
+      --pine-2:#9cd0bc;
+      --rust:#e08a63;
+      --rust-2:#f0a480;
+      --muted:#9a998c;
+      --card:#1b221d;
+      --need-bg:#1b221d;
+      --got-bg:#1e2a20;
+      --tag-review:#8fd19e;
+      --tag-accidental:#e08a63;
+      --tag-presumptive:#9a998c;
+      --tag-introduced:#8fd19e;
+      --tag-historical:#9a998c;
+    }
+  }
+  :root[data-theme="dark"]{
+    --ink:#ece6d8;
+    --paper:#141a16;
+    --paper-2:#1b221d;
+    --line:#3a4238;
+    --pine:#7fb8a4;
+    --pine-2:#9cd0bc;
+    --rust:#e08a63;
+    --rust-2:#f0a480;
+    --muted:#9a998c;
+    --card:#1b221d;
+    --need-bg:#1b221d;
+    --got-bg:#1e2a20;
+    --tag-review:#8fd19e;
+    --tag-accidental:#e08a63;
+    --tag-presumptive:#9a998c;
+    --tag-introduced:#8fd19e;
+    --tag-historical:#9a998c;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Public Sans',system-ui,-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.5;
+  }
+  .wrap{
+    max-width:640px;
+    margin:0 auto;
+    padding:2.25rem 1.25rem 5rem;
+  }
+  .mark{
+    display:flex;
+    align-items:center;
+    gap:.55rem;
+    color:var(--pine);
+    font-weight:600;
+    font-size:.8rem;
+    letter-spacing:.02em;
+    margin-bottom:1.1rem;
+  }
+  .mark svg{ flex:none; }
+
+  h1{
+    font-family:'Fraunces',serif;
+    font-weight:500;
+    font-size:2.35rem;
+    line-height:1.08;
+    letter-spacing:-0.01em;
+    margin:0 0 .6rem;
+    max-width:15ch;
+  }
+  h1 em{
+    font-style:italic;
+    color:var(--rust);
+  }
+  .lede{
+    color:var(--muted);
+    font-size:1.02rem;
+    max-width:46ch;
+    margin:0 0 2.1rem;
+  }
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:1.4rem 1.4rem 1.5rem;
+    margin-bottom:1.1rem;
+  }
+
+  .field-label{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-bottom:.6rem;
+  }
+  .field-label .num{
+    font-family:'Fraunces',serif;
+    font-style:italic;
+    color:var(--rust);
+    font-size:.95rem;
+    margin-right:.5rem;
+  }
+  .field-label h2{
+    font-family:'Fraunces',serif;
+    font-weight:500;
+    font-size:1.08rem;
+    margin:0;
+    flex:1;
+  }
+  .sub{
+    font-size:.82rem;
+    color:var(--muted);
+  }
+
+  .drop{
+    border:1.5px dashed var(--line);
+    border-radius:3px;
+    padding:1.5rem 1rem;
+    text-align:center;
+    cursor:pointer;
+    transition:border-color .15s ease, background .15s ease;
+    position:relative;
+  }
+  .drop:hover, .drop.drag{
+    border-color:var(--pine);
+    background:var(--got-bg);
+  }
+  .drop input{
+    position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%;
+  }
+  .drop .icon{
+    font-size:1.5rem;
+    margin-bottom:.35rem;
+    display:block;
+  }
+  .drop .main{
+    font-weight:600;
+    font-size:.92rem;
+  }
+  .drop .hint{
+    font-size:.78rem;
+    color:var(--muted);
+    margin-top:.2rem;
+  }
+  .filename{
+    margin-top:.7rem;
+    font-size:.85rem;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:.5rem;
+    background:var(--got-bg);
+    border:1px solid var(--line);
+    border-radius:3px;
+    padding:.5rem .7rem;
+  }
+  .filename button{
+    background:none;
+    border:none;
+    color:var(--rust);
+    font-family:'Public Sans',sans-serif;
+    font-size:.78rem;
+    font-weight:600;
+    cursor:pointer;
+    padding:0;
+  }
+  .privacy-note{
+    font-size:.78rem;
+    color:var(--muted);
+    margin-top:.9rem;
+    border-top:1px solid var(--line);
+    padding-top:.7rem;
+  }
+
+  .error-box{
+    background: color-mix(in srgb, var(--rust) 12%, var(--card));
+    border:1px solid var(--rust);
+    border-radius:3px;
+    padding:.7rem .9rem;
+    font-size:.85rem;
+    margin-top:.8rem;
+    color:var(--ink);
+  }
+
+  .stats{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:1px;
+    background:var(--line);
+    border:1px solid var(--line);
+    border-radius:4px;
+    overflow:hidden;
+    margin-bottom:1.3rem;
+  }
+  .stat{
+    background:var(--card);
+    padding:.9rem .6rem;
+    text-align:center;
+  }
+  .stat .n{
+    font-family:'Fraunces',serif;
+    font-size:1.55rem;
+    font-weight:500;
+    display:block;
+    line-height:1.1;
+  }
+  .stat.need .n{ color:var(--rust); }
+  .stat.got .n{ color:var(--pine); }
+  .stat[style*="cursor:pointer"]:hover{ background:var(--got-bg); }
+  .stat.stat-active{ background:var(--got-bg); outline:2px solid var(--pine); outline-offset:-2px; }
+  .stat .l{
+    font-size:.7rem;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color:var(--muted);
+    margin-top:.25rem;
+    display:block;
+  }
+
+  .progress-track{
+    height:8px;
+    background:var(--line);
+    border-radius:4px;
+    overflow:hidden;
+    margin-top:1rem;
+  }
+  .progress-fill{
+    height:100%;
+    background:var(--pine);
+    border-radius:4px;
+    transition:width .3s ease;
+  }
+  .progress-label{
+    font-size:.72rem;
+    color:var(--muted);
+    text-align:center;
+    margin:.35rem 0 1.3rem;
+  }
+
+  .controls{
+    display:flex;
+    flex-wrap:wrap;
+    gap:.5rem .9rem;
+    align-items:center;
+    margin-bottom:1.2rem;
+  }
+  .search{
+    flex:1 1 160px;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:3px;
+    padding:.5rem .7rem;
+    font-family:'Public Sans',sans-serif;
+    font-size:.88rem;
+    color:var(--ink);
+  }
+  .search:focus{ outline:2px solid var(--pine); outline-offset:-1px; }
+  .search-wrap{
+    position:relative;
+    flex:1 1 160px;
+    display:flex;
+  }
+  .search-wrap .search{
+    flex:1 1 auto;
+    padding-right:1.8rem;
+  }
+  .search-clear{
+    position:absolute;
+    right:.4rem;
+    top:50%;
+    transform:translateY(-50%);
+    background:none;
+    border:none;
+    color:var(--muted);
+    font-size:1rem;
+    line-height:1;
+    cursor:pointer;
+    padding:.15rem .3rem;
+    display:none;
+  }
+  .search-clear.show{ display:block; }
+  .search-history-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:.4rem;
+    margin:-.7rem 0 1.1rem;
+  }
+  .search-history-pill{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:20px;
+    color:var(--muted);
+    font-size:.74rem;
+    padding:.2rem .65rem;
+    cursor:pointer;
+    font-family:'Public Sans',sans-serif;
+  }
+  .search-history-pill:hover{ border-color:var(--pine); color:var(--pine); }
+  .toggle{
+    display:flex;
+    align-items:center;
+    gap:.4rem;
+    font-size:.8rem;
+    color:var(--muted);
+    cursor:pointer;
+    user-select:none;
+    white-space:nowrap;
+  }
+  .toggle input{ accent-color:var(--pine); width:14px; height:14px; }
+
+  .family-group{
+    margin-bottom:1.6rem;
+  }
+  .family-title{
+    font-family:'Fraunces',serif;
+    font-style:italic;
+    font-size:.98rem;
+    color:var(--pine);
+    border-bottom:1px solid var(--line);
+    padding-bottom:.35rem;
+    margin-bottom:.15rem;
+    display:flex;
+    justify-content:space-between;
+    cursor:pointer;
+    user-select:none;
+  }
+  .family-group.collapsed .species-row{ display:none; }
+  .family-title .count{
+    font-family:'Public Sans',sans-serif;
+    font-style:normal;
+    font-size:.72rem;
+    color:var(--muted);
+  }
+  .species-row{
+    display:flex;
+    align-items:baseline;
+    gap:.55rem;
+    padding:.44rem .1rem;
+    border-bottom:1px solid color-mix(in srgb, var(--line) 55%, transparent);
+    font-size:.92rem;
+  }
+  .species-row:last-child{ border-bottom:none; }
+  @keyframes flashRow{
+    0%{ background:var(--got-bg); }
+    100%{ background:transparent; }
+  }
+  .species-row.flash{ animation:flashRow .6s ease; }
+  .species-row .box{
+    flex:none;
+    width:13px;height:13px;
+    border:1.4px solid var(--rust);
+    border-radius:2px;
+    margin-top:.2rem;
+  }
+  .species-row.have .box{
+    background:var(--pine);
+    border-color:var(--pine);
+  }
+  .species-row .name{ flex:1; }
+  .species-row.have .name{
+    color:var(--muted);
+  }
+  .tag{
+    font-size:.66rem;
+    font-weight:600;
+    letter-spacing:.02em;
+    padding:.1rem .35rem;
+    border-radius:2px;
+    color:var(--muted);
+    border:1px solid var(--line);
+    flex:none;
+  }
+  .tag-review{ color:var(--tag-review); border-color:var(--tag-review); }
+  .tag-accidental{ color:var(--tag-accidental); border-color:var(--tag-accidental); }
+  .tag-presumptive{ color:var(--tag-presumptive); border-color:var(--tag-presumptive); }
+  .tag-introduced{ color:var(--tag-introduced); border-color:var(--tag-introduced); }
+  .tag-historical{ color:var(--tag-historical); border-color:var(--tag-historical); border-style:dashed; }
+  .range-link{
+    flex:none;
+    font-size:.7rem;
+    color:var(--pine);
+    text-decoration:none;
+    border:1px solid var(--line);
+    border-radius:2px;
+    padding:.1rem .35rem;
+    white-space:nowrap;
+  }
+  .range-link:hover{ border-color:var(--pine); }
+  .share-single{
+    flex:none;
+    font-size:.78rem;
+    color:var(--pine);
+    background:none;
+    border:1px solid var(--line);
+    border-radius:2px;
+    padding:.1rem .4rem;
+    cursor:pointer;
+    font-family:'Public Sans',sans-serif;
+    line-height:1.3;
+  }
+  .share-single:hover{ border-color:var(--pine); }
+
+  .empty-state{
+    text-align:center;
+    padding:2rem 1rem;
+    color:var(--muted);
+    font-size:.9rem;
+  }
+
+  .reset-row{
+    text-align:center;
+    margin-top:1.8rem;
+  }
+  .reset-row button{
+    background:none;
+    border:1px solid var(--line);
+    color:var(--muted);
+    font-family:'Public Sans',sans-serif;
+    font-size:.8rem;
+    padding:.5rem 1rem;
+    border-radius:20px;
+    cursor:pointer;
+  }
+  .reset-row button:hover{ border-color:var(--rust); color:var(--rust); }
+
+  footer{
+    margin-top:2.5rem;
+    padding-top:1.2rem;
+    border-top:1px solid var(--line);
+    font-size:.76rem;
+    color:var(--muted);
+    line-height:1.6;
+  }
+
+  ::selection{ background:var(--rust); color:var(--paper); }
+
+  @media (max-width:420px){
+    h1{ font-size:1.95rem; }
+    .stats{ grid-template-columns:1fr 1fr 1fr; }
+    .stat{ padding:.7rem .3rem; }
+    .stat .n{ font-size:1.25rem; }
+  }
+</style>
+</head>
+<body>
+<script>
+  try{
+    const t = localStorage.getItem('txBirdsINeed_theme');
+    if(t) document.documentElement.setAttribute('data-theme', t);
+  }catch(e){}
+</script>
+<div class="wrap">
+
+  <div class="mark" style="justify-content:space-between;">
+    <span style="display:flex; align-items:center; gap:.55rem;">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M2 12.5C4 9 7 4 12 4C15 4 17.5 6.5 17.5 9C17.5 9 15 9 13.5 9C13.5 9 15 11.5 18 12C18 12 14.5 13.5 11 12.5C11 12.5 12 15.5 9 17C9 17 8 14 7.5 12C7.5 12 4.5 13 2 12.5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+        <circle cx="13.3" cy="6.8" r="0.9" fill="currentColor"/>
+      </svg>
+      Personal checklist
+    </span>
+    <button id="themeToggle" style="background:none; border:1px solid var(--line); border-radius:20px; color:var(--muted); font-size:.75rem; padding:.25rem .65rem; cursor:pointer; font-family:'Public Sans',sans-serif;">System</button>
+  </div>
+
+  <h1>Find your next <em>Texas</em> bird.</h1>
+  <p class="lede">Upload your eBird sightings and compare them against the full Texas state checklist to see exactly which species you still need.</p>
+
+  <div id="uploadCard" class="card">
+    <div class="field-label">
+      <div><span class="num">01</span><h2 style="display:inline;">Life list or year list</h2></div>
+    </div>
+    <p class="sub" style="margin:-.3rem 0 .8rem;">Your CSV or Excel export from eBird ("My eBird" → Download my data).</p>
+
+    <div id="drop" class="drop">
+      <input id="fileInput" type="file" accept=".csv,.xlsx,.xls" />
+      <span class="icon">&#9992;</span>
+      <div class="main">Choose your sightings file</div>
+      <div class="hint">or drag it here — .csv, .xlsx, or .xls</div>
+    </div>
+    <div id="filenameBox" style="display:none;" class="filename">
+      <span id="filenameText"></span>
+      <button id="clearFile">Remove</button>
+    </div>
+    <div id="errorBox" style="display:none;" class="error-box"></div>
+
+    <p class="privacy-note">Your file is read in your browser and never leaves this page — nothing is uploaded to a server.</p>
+  </div>
+
+  <div id="resultsSection" style="display:none;">
+
+    <div class="stats">
+      <div class="stat got" id="cardGot" style="cursor:pointer;"><span class="n" id="statGot">0</span><span class="l">Recorded</span></div>
+      <div class="stat need" id="cardNeed" style="cursor:pointer;"><span class="n" id="statNeed">0</span><span class="l">Still need</span></div>
+      <div class="stat" id="cardTotal" style="cursor:pointer;"><span class="n" id="statTotal">0</span><span class="l">Texas total</span></div>
+    </div>
+
+    <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%;"></div></div>
+    <div class="progress-label" id="progressLabel"></div>
+    <div class="progress-label" id="sessionAddedLabel" style="margin-top:-1rem; display:none;"></div>
+
+    <div class="stats" style="margin-top:-.6rem; grid-template-columns:1fr 1fr 1fr;">
+      <div class="stat" id="cardReviewList" style="cursor:pointer;"><span class="n" id="statReviewList" style="font-size:1.2rem;">0</span><span class="l">Review List seen</span></div>
+      <div class="stat" id="cardAccidental" style="cursor:pointer;"><span class="n" id="statAccidental" style="font-size:1.2rem;">0</span><span class="l">Accidental seen</span></div>
+      <div class="stat" id="cardPresumptive" style="cursor:pointer;"><span class="n" id="statPresumptive" style="font-size:1.2rem;">0</span><span class="l">Presumptive seen</span></div>
+    </div>
+
+    <div class="controls">
+      <div class="search-wrap">
+        <input id="searchBox" class="search" type="text" placeholder="Search species…" />
+        <button id="searchClear" class="search-clear" type="button" aria-label="Clear search">✕</button>
+      </div>
+      <select id="sortMode" class="search" style="flex:none; width:auto;">
+        <option value="taxo">Taxonomic order</option>
+        <option value="alpha">Alphabetical</option>
+      </select>
+      <select id="familyJump" class="search" style="flex:none; width:auto;">
+        <option value="">Jump to family…</option>
+      </select>
+      <label class="toggle"><input type="checkbox" id="toggleRare"> Include extinct / historical</label>
+      <label class="toggle"><input type="checkbox" id="toggleHideAccidental"> Hide accidental</label>
+      <label class="toggle"><input type="checkbox" id="toggleHidePresumptive"> Hide presumptive</label>
+    </div>
+
+    <div id="searchHistoryRow" class="search-history-row" style="display:none;"></div>
+
+    <div id="listArea"></div>
+
+    <div class="reset-row">
+      <button id="shareBtn" style="border-color:var(--pine); color:var(--pine); margin-right:.5rem;">Share needs list</button>
+      <button id="shareFullBtn" style="border-color:var(--pine); color:var(--pine); margin-right:.5rem;">Share full list</button>
+      <button id="clearMarksBtn" style="margin-right:.5rem;">Clear manual marks</button>
+      <button id="resetBtn">Start over with a new file</button>
+    </div>
+    <div id="undoBanner" style="display:none; margin-top:.8rem; text-align:center; font-size:.85rem; color:var(--muted);">
+      File cleared. <button id="undoBtn" style="background:none;border:none;color:var(--pine);font-weight:600;text-decoration:underline;cursor:pointer;padding:0;font-family:inherit;font-size:inherit;">Undo</button>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:1.5rem;">
+    <div class="field-label">
+      <h2 style="display:inline;">General notes</h2>
+    </div>
+    <p class="sub" style="margin:-.3rem 0 .6rem;">A scratchpad for anything worth remembering — taxonomy questions, discrepancies between sources, trip notes. Saved on this device only.</p>
+    <textarea id="generalNotes" rows="4" style="width:100%; resize:vertical; background:var(--card); border:1px solid var(--line); border-radius:3px; padding:.6rem .7rem; font-family:'Public Sans',sans-serif; font-size:.88rem; color:var(--ink);" placeholder="Type notes here…"></textarea>
+  </div>
+
+  <footer>
+    Master list follows <em>A Checklist of Texas Birds</em>, eighth edition (2025), Texas Parks &amp; Wildlife Department / Texas Bird Records Committee — 697 species including accidental, introduced, extinct/extirpated, and historical/hypothetical records. Matching is done by common name and may miss recent taxonomic splits your file predates.
+  </footer>
+
+</div>
+
+<script>
+const SPECIES = [["Black-bellied Whistling-Duck","Anatidae",""],["Fulvous Whistling-Duck","Anatidae",""],["Snow Goose","Anatidae",""],["Ross's Goose","Anatidae",""],["Greater White-fronted Goose","Anatidae",""],["Brant","Anatidae","*"],["Barnacle Goose","Anatidae","H**"],["Cackling Goose","Anatidae",""],["Canada Goose","Anatidae",""],["Mute Swan","Anatidae","R"],["Trumpeter Swan","Anatidae","*"],["Tundra Swan","Anatidae",""],["Egyptian Goose","Anatidae","R"],["Muscovy Duck","Anatidae",""],["Wood Duck","Anatidae",""],["Garganey","Anatidae","*"],["Blue-winged Teal","Anatidae",""],["Cinnamon Teal","Anatidae",""],["Northern Shoveler","Anatidae",""],["Gadwall","Anatidae",""],["Eurasian Wigeon","Anatidae","*"],["American Wigeon","Anatidae",""],["Mallard","Anatidae",""],["Mexican Duck","Anatidae",""],["American Black Duck","Anatidae","*"],["Mottled Duck","Anatidae",""],["White-cheeked Pintail","Anatidae","A*"],["Northern Pintail","Anatidae",""],["Green-winged Teal","Anatidae",""],["Canvasback","Anatidae",""],["Redhead","Anatidae",""],["Ring-necked Duck","Anatidae",""],["Greater Scaup","Anatidae",""],["Lesser Scaup","Anatidae",""],["Tufted Duck","Anatidae","A*"],["King Eider","Anatidae","A*"],["Common Eider","Anatidae","A*"],["Harlequin Duck","Anatidae","A*"],["Surf Scoter","Anatidae",""],["White-winged Scoter","Anatidae",""],["Black Scoter","Anatidae",""],["Long-tailed Duck","Anatidae",""],["Bufflehead","Anatidae",""],["Common Goldeneye","Anatidae",""],["Barrow's Goldeneye","Anatidae","*"],["Hooded Merganser","Anatidae",""],["Common Merganser","Anatidae",""],["Red-breasted Merganser","Anatidae",""],["Masked Duck","Anatidae","*"],["Ruddy Duck","Anatidae",""],["Plain Chachalaca","Cracidae",""],["Northern Bobwhite","Odontophoridae",""],["Scaled Quail","Odontophoridae",""],["Gambel's Quail","Odontophoridae",""],["Montezuma Quail","Odontophoridae",""],["Wild Turkey","Phasianidae",""],["Sharp-tailed Grouse","Phasianidae","H**"],["Greater Prairie-Chicken","Phasianidae",""],["Lesser Prairie-Chicken","Phasianidae",""],["Ring-necked Pheasant","Phasianidae","I"],["Chukar","Phasianidae","R"],["American Flamingo","Phoenicopteridae","*"],["Least Grebe","Podicipedidae",""],["Pied-billed Grebe","Podicipedidae",""],["Horned Grebe","Podicipedidae",""],["Red-necked Grebe","Podicipedidae","*"],["Eared Grebe","Podicipedidae",""],["Western Grebe","Podicipedidae",""],["Clark's Grebe","Podicipedidae",""],["Inca Dove","Columbidae",""],["Common Ground Dove","Columbidae",""],["Ruddy Ground Dove","Columbidae","*"],["Ruddy Quail-Dove","Columbidae","A*"],["White-tipped Dove","Columbidae",""],["White-winged Dove","Columbidae",""],["Mourning Dove","Columbidae",""],["Passenger Pigeon","Columbidae","X"],["Band-tailed Pigeon","Columbidae",""],["White-crowned Pigeon","Columbidae","*"],["Red-billed Pigeon","Columbidae",""],["Eurasian Collared-Dove","Columbidae","I"],["African Collared-Dove","Columbidae","I/X"],["Rock Pigeon","Columbidae","I"],["Smooth-billed Ani","Cuculidae","A*"],["Groove-billed Ani","Cuculidae",""],["Greater Roadrunner","Cuculidae",""],["Dark-billed Cuckoo","Cuculidae","A*"],["Yellow-billed Cuckoo","Cuculidae",""],["Mangrove Cuckoo","Cuculidae","*"],["Black-billed Cuckoo","Cuculidae",""],["Lesser Nighthawk","Caprimulgidae",""],["Common Nighthawk","Caprimulgidae",""],["Common Pauraque","Caprimulgidae",""],["Common Poorwill","Caprimulgidae",""],["Chuck-will's-widow","Caprimulgidae",""],["Eastern Whip-poor-will","Caprimulgidae",""],["Mexican Whip-poor-will","Caprimulgidae",""],["Black Swift","Apodidae","A*"],["White-collared Swift","Apodidae","*"],["Chimney Swift","Apodidae",""],["Vaux's Swift","Apodidae","H**"],["White-throated Swift","Apodidae",""],["Mexican Violetear","Trochilidae","*"],["Green-breasted Mango","Trochilidae","*"],["Rivoli's Hummingbird","Trochilidae",""],["Amethyst-throated Mountain-gem","Trochilidae","A*"],["Blue-throated Mountain-gem","Trochilidae",""],["Lucifer Hummingbird","Trochilidae",""],["Ruby-throated Hummingbird","Trochilidae",""],["Black-chinned Hummingbird","Trochilidae",""],["Anna's Hummingbird","Trochilidae",""],["Costa's Hummingbird","Trochilidae","*"],["Calliope Hummingbird","Trochilidae",""],["Rufous Hummingbird","Trochilidae",""],["Allen's Hummingbird","Trochilidae",""],["Broad-tailed Hummingbird","Trochilidae",""],["Broad-billed Hummingbird","Trochilidae",""],["White-eared Hummingbird","Trochilidae","*"],["Antillean Crested Hummingbird","Trochilidae","H**"],["Violet-crowned Hummingbird","Trochilidae","*"],["Berylline Hummingbird","Trochilidae","*"],["Buff-bellied Hummingbird","Trochilidae",""],["Rufous-tailed Hummingbird","Trochilidae","H**"],["Limpkin","Aramidae",""],["Sandhill Crane","Gruidae",""],["Common Crane","Gruidae","*"],["Whooping Crane","Gruidae",""],["Spotted Rail","Rallidae","A*"],["Paint-billed Crake","Rallidae","A*"],["Clapper Rail","Rallidae",""],["King Rail","Rallidae",""],["Virginia Rail","Rallidae",""],["Sora","Rallidae",""],["Common Gallinule","Rallidae",""],["American Coot","Rallidae",""],["Purple Gallinule","Rallidae",""],["Yellow Rail","Rallidae",""],["Black Rail","Rallidae",""],["Double-striped Thick-knee","Burhinidae","A*"],["Black-necked Stilt","Recurvirostridae",""],["American Avocet","Recurvirostridae",""],["American Oystercatcher","Haematopodidae",""],["Black-bellied Plover","Charadriidae",""],["American Golden-Plover","Charadriidae",""],["Pacific Golden-Plover","Charadriidae","A*"],["Killdeer","Charadriidae",""],["Semipalmated Plover","Charadriidae",""],["Piping Plover","Charadriidae",""],["Southern Lapwing","Charadriidae","A*"],["Wilson's Plover","Charadriidae",""],["Collared Plover","Charadriidae","A*"],["Mountain Plover","Charadriidae",""],["Snowy Plover","Charadriidae",""],["Northern Jacana","Jacanidae","*"],["Upland Sandpiper","Scolopacidae",""],["Hudsonian Whimbrel","Scolopacidae",""],["Eurasian Whimbrel","Scolopacidae","A*"],["Eskimo Curlew","Scolopacidae","X"],["Long-billed Curlew","Scolopacidae",""],["Bar-tailed Godwit","Scolopacidae","A*"],["Black-tailed Godwit","Scolopacidae","A*"],["Hudsonian Godwit","Scolopacidae",""],["Marbled Godwit","Scolopacidae",""],["Ruddy Turnstone","Scolopacidae",""],["Black Turnstone","Scolopacidae","A*"],["Red Knot","Scolopacidae",""],["Surfbird","Scolopacidae","*"],["Ruff","Scolopacidae","*"],["Sharp-tailed Sandpiper","Scolopacidae","A*"],["Stilt Sandpiper","Scolopacidae",""],["Curlew Sandpiper","Scolopacidae","*"],["Red-necked Stint","Scolopacidae","A*"],["Sanderling","Scolopacidae",""],["Dunlin","Scolopacidae",""],["Purple Sandpiper","Scolopacidae","*"],["Baird's Sandpiper","Scolopacidae",""],["Least Sandpiper","Scolopacidae",""],["White-rumped Sandpiper","Scolopacidae",""],["Buff-breasted Sandpiper","Scolopacidae",""],["Pectoral Sandpiper","Scolopacidae",""],["Semipalmated Sandpiper","Scolopacidae",""],["Western Sandpiper","Scolopacidae",""],["Short-billed Dowitcher","Scolopacidae",""],["Long-billed Dowitcher","Scolopacidae",""],["American Woodcock","Scolopacidae",""],["Wilson's Snipe","Scolopacidae",""],["Spotted Sandpiper","Scolopacidae",""],["Solitary Sandpiper","Scolopacidae",""],["Wandering Tattler","Scolopacidae","A*"],["Lesser Yellowlegs","Scolopacidae",""],["Saltmarsh Willet","Scolopacidae",""],["Prairie Willet","Scolopacidae",""],["Spotted Redshank","Scolopacidae","A*"],["Greater Yellowlegs","Scolopacidae",""],["Wilson's Phalarope","Scolopacidae",""],["Red-necked Phalarope","Scolopacidae",""],["Red Phalarope","Scolopacidae","*"],["South Polar Skua","Stercorariidae","A*"],["Pomarine Jaeger","Stercorariidae",""],["Parasitic Jaeger","Stercorariidae",""],["Long-tailed Jaeger","Stercorariidae","*"],["Razorbill","Alcidae","P**"],["Murre sp.","Alcidae","P**"],["Brown Noddy","Laridae","*"],["Black Noddy","Laridae","*"],["Sooty Tern","Laridae",""],["Bridled Tern","Laridae",""],["Least Tern","Laridae",""],["Gull-billed Tern","Laridae",""],["Caspian Tern","Laridae",""],["Black Tern","Laridae",""],["Roseate Tern","Laridae","A*"],["Common Tern","Laridae",""],["Arctic Tern","Laridae","*"],["Forster's Tern","Laridae",""],["Royal Tern","Laridae",""],["Sandwich Tern","Laridae",""],["Elegant Tern","Laridae","*"],["Black Skimmer","Laridae",""],["Black-legged Kittiwake","Laridae",""],["Sabine's Gull","Laridae",""],["Bonaparte's Gull","Laridae",""],["Black-headed Gull","Laridae","*"],["Little Gull","Laridae",""],["Gray Gull","Laridae","A*"],["Laughing Gull","Laridae",""],["Franklin's Gull","Laridae",""],["Black-tailed Gull","Laridae","A*"],["Heermann's Gull","Laridae","*"],["Short-billed Gull","Laridae","*"],["Ring-billed Gull","Laridae",""],["Western Gull","Laridae","*"],["Yellow-footed Gull","Laridae","A*"],["California Gull","Laridae",""],["Vega Gull","Laridae","*"],["American Herring Gull","Laridae",""],["Yellow-legged Gull","Laridae","A*"],["Iceland Gull","Laridae",""],["Lesser Black-backed Gull","Laridae",""],["Slaty-backed Gull","Laridae","*"],["Glaucous-winged Gull","Laridae","A*"],["Glaucous Gull","Laridae",""],["Great Black-backed Gull","Laridae","*"],["Kelp Gull","Laridae","*"],["White-tailed Tropicbird","Phaethontidae","A*"],["Red-billed Tropicbird","Phaethontidae","*"],["Red-throated Loon","Gaviidae",""],["Pacific Loon","Gaviidae",""],["Common Loon","Gaviidae",""],["Yellow-billed Loon","Gaviidae","*"],["Yellow-nosed Albatross","Diomedeidae","*"],["Wilson's Storm-Petrel","Oceanitidae","A*"],["Leach's Storm-Petrel","Hydrobatidae","*"],["Band-rumped Storm-Petrel","Hydrobatidae",""],["Trindade Petrel","Procellariidae","A*"],["Black-capped Petrel","Procellariidae","A*"],["Stejneger's Petrel","Procellariidae","A*"],["White-chinned Petrel","Procellariidae","A*"],["Cory's Shearwater","Procellariidae",""],["Scopoli's Shearwater","Procellariidae",""],["Wedge-tailed Shearwater","Procellariidae","A*"],["Sooty Shearwater","Procellariidae","*"],["Great Shearwater","Procellariidae","*"],["Manx Shearwater","Procellariidae","*"],["Sargasso Shearwater","Procellariidae",""],["Jabiru","Ciconiidae","*"],["Wood Stork","Ciconiidae",""],["Magnificent Frigatebird","Fregatidae",""],["Masked Booby","Sulidae",""],["Nazca Booby","Sulidae","A*"],["Blue-footed Booby","Sulidae","A*"],["Brown Booby","Sulidae",""],["Red-footed Booby","Sulidae","*"],["Northern Gannet","Sulidae",""],["Anhinga","Anhingidae",""],["Double-crested Cormorant","Phalacrocoracidae",""],["Neotropic Cormorant","Phalacrocoracidae",""],["White Ibis","Threskiornithidae",""],["Glossy Ibis","Threskiornithidae",""],["White-faced Ibis","Threskiornithidae",""],["Roseate Spoonbill","Threskiornithidae",""],["American White Pelican","Pelecanidae",""],["Brown Pelican","Pelecanidae",""],["Bare-throated Tiger-Heron","Ardeidae","A*"],["Least Bittern","Ardeidae",""],["American Bittern","Ardeidae",""],["Little Blue Heron","Ardeidae",""],["Tricolored Heron","Ardeidae",""],["Reddish Egret","Ardeidae",""],["Snowy Egret","Ardeidae",""],["Yellow-crowned Night Heron","Ardeidae",""],["Black-crowned Night Heron","Ardeidae",""],["Green Heron","Ardeidae",""],["Great Egret","Ardeidae",""],["Western Cattle-Egret","Ardeidae",""],["Great Blue Heron","Ardeidae",""],["Black Vulture","Cathartidae",""],["Turkey Vulture","Cathartidae",""],["Osprey","Pandionidae",""],["White-tailed Kite","Accipitridae",""],["Hook-billed Kite","Accipitridae",""],["Swallow-tailed Kite","Accipitridae",""],["Golden Eagle","Accipitridae",""],["Double-toothed Kite","Accipitridae","A*"],["Sharp-shinned Hawk","Accipitridae",""],["Cooper's Hawk","Accipitridae",""],["American Goshawk","Accipitridae","*"],["Northern Harrier","Accipitridae",""],["Bald Eagle","Accipitridae",""],["Steller's Sea-Eagle","Accipitridae","A*"],["Mississippi Kite","Accipitridae",""],["Crane Hawk","Accipitridae","A*"],["Snail Kite","Accipitridae","*"],["Common Black Hawk","Accipitridae",""],["Great Black Hawk","Accipitridae","A*"],["Roadside Hawk","Accipitridae","*"],["Harris's Hawk","Accipitridae",""],["White-tailed Hawk","Accipitridae",""],["Gray Hawk","Accipitridae",""],["Red-shouldered Hawk","Accipitridae",""],["Broad-winged Hawk","Accipitridae",""],["Short-tailed Hawk","Accipitridae","*"],["Swainson's Hawk","Accipitridae",""],["Zone-tailed Hawk","Accipitridae",""],["Red-tailed Hawk","Accipitridae",""],["Rough-legged Hawk","Accipitridae",""],["Ferruginous Hawk","Accipitridae",""],["American Barn Owl","Tytonidae",""],["Flammulated Owl","Strigidae",""],["Western Screech-Owl","Strigidae",""],["Eastern Screech-Owl","Strigidae",""],["Great Horned Owl","Strigidae",""],["Snowy Owl","Strigidae","*"],["Northern Pygmy-Owl","Strigidae","*"],["Ferruginous Pygmy-Owl","Strigidae",""],["Elf Owl","Strigidae",""],["Burrowing Owl","Strigidae",""],["Mottled Owl","Strigidae","A*"],["Spotted Owl","Strigidae",""],["Barred Owl","Strigidae",""],["Long-eared Owl","Strigidae",""],["Stygian Owl","Strigidae","A*"],["Short-eared Owl","Strigidae",""],["Northern Saw-whet Owl","Strigidae","*"],["Elegant Trogon","Trogonidae","*"],["Ringed Kingfisher","Alcedinidae",""],["Belted Kingfisher","Alcedinidae",""],["Amazon Kingfisher","Alcedinidae","A*"],["Green Kingfisher","Alcedinidae",""],["Lewis's Woodpecker","Picidae",""],["Red-headed Woodpecker","Picidae",""],["Acorn Woodpecker","Picidae",""],["Golden-fronted Woodpecker","Picidae",""],["Red-bellied Woodpecker","Picidae",""],["Williamson's Sapsucker","Picidae",""],["Yellow-bellied Sapsucker","Picidae",""],["Red-naped Sapsucker","Picidae",""],["Red-breasted Sapsucker","Picidae","A*"],["Downy Woodpecker","Picidae",""],["Ladder-backed Woodpecker","Picidae",""],["Red-cockaded Woodpecker","Picidae",""],["Hairy Woodpecker","Picidae",""],["Northern Flicker","Picidae",""],["Pileated Woodpecker","Picidae",""],["Ivory-billed Woodpecker","Picidae","X*"],["Collared Forest-Falcon","Falconidae","A*"],["Crested Caracara","Falconidae",""],["Yellow-headed Caracara","Falconidae","A*"],["American Kestrel","Falconidae",""],["Merlin","Falconidae",""],["Aplomado Falcon","Falconidae",""],["Bat Falcon","Falconidae","A*"],["Gyrfalcon","Falconidae","A*"],["Peregrine Falcon","Falconidae",""],["Prairie Falcon","Falconidae",""],["Monk Parakeet","Psittacidae","I"],["Carolina Parakeet","Psittacidae","X"],["Green Parakeet","Psittacidae","M"],["Red-crowned Amazon","Psittacidae","M"],["Red-lored Amazon","Psittacidae","R**"],["Yellow-headed Amazon","Psittacidae","R**"],["Lilac-crowned Amazon","Psittacidae","I**"],["Masked Tityra","Tityridae","A*"],["Gray-collared Becard","Tityridae","A*"],["Rose-throated Becard","Tityridae",""],["Northern Beardless-Tyrannulet","Tyrannidae",""],["Greenish Elaenia","Tyrannidae","A*"],["Small-billed Elaenia","Tyrannidae","A*"],["White-crested Elaenia","Tyrannidae","A*"],["Dusky-capped Flycatcher","Tyrannidae",""],["Ash-throated Flycatcher","Tyrannidae",""],["Nutting's Flycatcher","Tyrannidae","*"],["Great Crested Flycatcher","Tyrannidae",""],["Brown-crested Flycatcher","Tyrannidae",""],["Great Kiskadee","Tyrannidae",""],["Social Flycatcher","Tyrannidae","*"],["Sulphur-bellied Flycatcher","Tyrannidae","*"],["Piratic Flycatcher","Tyrannidae","*"],["Variegated Flycatcher","Tyrannidae","A*"],["Tropical Kingbird","Tyrannidae",""],["Couch's Kingbird","Tyrannidae",""],["Cassin's Kingbird","Tyrannidae",""],["Thick-billed Kingbird","Tyrannidae","*"],["Western Kingbird","Tyrannidae",""],["Eastern Kingbird","Tyrannidae",""],["Gray Kingbird","Tyrannidae","*"],["Scissor-tailed Flycatcher","Tyrannidae",""],["Fork-tailed Flycatcher","Tyrannidae","*"],["Tufted Flycatcher","Tyrannidae","*"],["Olive-sided Flycatcher","Tyrannidae",""],["Greater Pewee","Tyrannidae","*"],["Western Wood-Pewee","Tyrannidae",""],["Eastern Wood-Pewee","Tyrannidae",""],["Yellow-bellied Flycatcher","Tyrannidae",""],["Acadian Flycatcher","Tyrannidae",""],["Alder Flycatcher","Tyrannidae",""],["Willow Flycatcher","Tyrannidae",""],["Least Flycatcher","Tyrannidae",""],["Hammond's Flycatcher","Tyrannidae",""],["Gray Flycatcher","Tyrannidae",""],["Dusky Flycatcher","Tyrannidae",""],["Western Flycatcher","Tyrannidae",""],["Buff-breasted Flycatcher","Tyrannidae","*"],["Black Phoebe","Tyrannidae",""],["Eastern Phoebe","Tyrannidae",""],["Say's Phoebe","Tyrannidae",""],["Vermilion Flycatcher","Tyrannidae",""],["Barred Antshrike","Thamnophilidae","A*"],["Black-capped Vireo","Vireonidae",""],["White-eyed Vireo","Vireonidae",""],["Bell's Vireo","Vireonidae",""],["Gray Vireo","Vireonidae",""],["Hutton's Vireo","Vireonidae",""],["Yellow-throated Vireo","Vireonidae",""],["Cassin's Vireo","Vireonidae",""],["Blue-headed Vireo","Vireonidae",""],["Plumbeous Vireo","Vireonidae",""],["Philadelphia Vireo","Vireonidae",""],["Western Warbling-Vireo","Vireonidae",""],["Eastern Warbling-Vireo","Vireonidae",""],["Red-eyed Vireo","Vireonidae",""],["Yellow-green Vireo","Vireonidae",""],["Black-whiskered Vireo","Vireonidae","*"],["Yucatan Vireo","Vireonidae","A*"],["Loggerhead Shrike","Laniidae",""],["Northern Shrike","Laniidae",""],["Brown Jay","Corvidae","*"],["Green Jay","Corvidae",""],["Pinyon Jay","Corvidae","*"],["Steller's Jay","Corvidae",""],["Blue Jay","Corvidae",""],["Woodhouse's Scrub-Jay","Corvidae",""],["Mexican Jay","Corvidae",""],["Clark's Nutcracker","Corvidae","*"],["Black-billed Magpie","Corvidae","*"],["American Crow","Corvidae",""],["Tamaulipas Crow","Corvidae","*"],["Fish Crow","Corvidae",""],["Chihuahuan Raven","Corvidae",""],["Common Raven","Corvidae",""],["Verdin","Remizidae",""],["Carolina Chickadee","Paridae",""],["Black-capped Chickadee","Paridae","A*"],["Mountain Chickadee","Paridae",""],["Bridled Titmouse","Paridae","H*"],["Juniper Titmouse","Paridae",""],["Tufted Titmouse","Paridae",""],["Black-crested Titmouse","Paridae",""],["Horned Lark","Alaudidae",""],["Blue-and-white Swallow","Hirundinidae","A*"],["Bank Swallow","Hirundinidae",""],["Tree Swallow","Hirundinidae",""],["Violet-green Swallow","Hirundinidae",""],["Northern Rough-winged Swallow","Hirundinidae",""],["Purple Martin","Hirundinidae",""],["Gray-breasted Martin","Hirundinidae","A*"],["Barn Swallow","Hirundinidae",""],["Cliff Swallow","Hirundinidae",""],["Cave Swallow","Hirundinidae",""],["Bushtit","Aegithalidae",""],["Red-vented Bulbul","Pycnonotidae","I"],["Ruby-crowned Kinglet","Regulidae",""],["Golden-crowned Kinglet","Regulidae",""],["Bohemian Waxwing","Bombycillidae","*"],["Cedar Waxwing","Bombycillidae",""],["Gray Silky-flycatcher","Ptiliogonatidae","A*"],["Phainopepla","Ptiliogonatidae",""],["Red-breasted Nuthatch","Sittidae",""],["White-breasted Nuthatch","Sittidae",""],["Pygmy Nuthatch","Sittidae",""],["Brown-headed Nuthatch","Sittidae",""],["Brown Creeper","Certhiidae",""],["Blue-gray Gnatcatcher","Polioptilidae",""],["Black-tailed Gnatcatcher","Polioptilidae",""],["Black-capped Gnatcatcher","Polioptilidae","H**"],["Rock Wren","Troglodytidae",""],["Canyon Wren","Troglodytidae",""],["Cactus Wren","Troglodytidae",""],["Bewick's Wren","Troglodytidae",""],["Carolina Wren","Troglodytidae",""],["Northern House Wren","Troglodytidae",""],["Pacific Wren","Troglodytidae","A*"],["Winter Wren","Troglodytidae",""],["Sedge Wren","Troglodytidae",""],["Eastern Marsh Wren","Troglodytidae",""],["Western Marsh Wren","Troglodytidae",""],["Blue Mockingbird","Mimidae","*"],["Gray Catbird","Mimidae",""],["Black Catbird","Mimidae","A*"],["Curve-billed Thrasher","Mimidae",""],["Brown Thrasher","Mimidae",""],["Long-billed Thrasher","Mimidae",""],["Crissal Thrasher","Mimidae",""],["Sage Thrasher","Mimidae",""],["Northern Mockingbird","Mimidae",""],["European Starling","Sturnidae","I"],["American Dipper","Cinclidae","*"],["Eastern Bluebird","Turdidae",""],["Western Bluebird","Turdidae",""],["Mountain Bluebird","Turdidae",""],["Townsend's Solitaire","Turdidae",""],["Orange-billed Nightingale-Thrush","Turdidae","A*"],["Black-headed Nightingale-Thrush","Turdidae","A*"],["Veery","Turdidae",""],["Gray-cheeked Thrush","Turdidae",""],["Swainson's Thrush","Turdidae",""],["Hermit Thrush","Turdidae",""],["Wood Thrush","Turdidae",""],["Clay-colored Thrush","Turdidae",""],["White-throated Thrush","Turdidae","*"],["Rufous-backed Robin","Turdidae","*"],["American Robin","Turdidae",""],["Varied Thrush","Turdidae","*"],["Aztec Thrush","Turdidae","*"],["Asian Stonechat","Muscicapidae","A*"],["Northern Wheatear","Muscicapidae","A*"],["Olive Warbler","Peucedramidae","*"],["Scaly-breasted Munia","Estrildidae","I"],["House Sparrow","Passeridae","I"],["White Wagtail","Motacillidae","A*"],["American Pipit","Motacillidae",""],["Sprague's Pipit","Motacillidae",""],["Evening Grosbeak","Fringillidae","*"],["Pine Grosbeak","Fringillidae","*"],["Gray-crowned Rosy-Finch","Fringillidae","A*"],["House Finch","Fringillidae",""],["Purple Finch","Fringillidae",""],["Cassin's Finch","Fringillidae",""],["Redpoll","Fringillidae","*"],["Red Crossbill","Fringillidae",""],["White-winged Crossbill","Fringillidae","*"],["Pine Siskin","Fringillidae",""],["Lesser Goldfinch","Fringillidae",""],["Lawrence's Goldfinch","Fringillidae","*"],["American Goldfinch","Fringillidae",""],["Lapland Longspur","Calcariidae",""],["Chestnut-collared Longspur","Calcariidae",""],["Smith's Longspur","Calcariidae",""],["Thick-billed Longspur","Calcariidae",""],["Snow Bunting","Calcariidae","*"],["Botteri's Sparrow","Passerellidae",""],["Cassin's Sparrow","Passerellidae",""],["Bachman's Sparrow","Passerellidae",""],["Grasshopper Sparrow","Passerellidae",""],["Olive Sparrow","Passerellidae",""],["Black-throated Sparrow","Passerellidae",""],["Lark Sparrow","Passerellidae",""],["Lark Bunting","Passerellidae",""],["Chipping Sparrow","Passerellidae",""],["Clay-colored Sparrow","Passerellidae",""],["Black-chinned Sparrow","Passerellidae",""],["Field Sparrow","Passerellidae",""],["Brewer's Sparrow","Passerellidae",""],["Fox Sparrow","Passerellidae",""],["American Tree Sparrow","Passerellidae",""],["Dark-eyed Junco","Passerellidae",""],["Yellow-eyed Junco","Passerellidae","*"],["White-crowned Sparrow","Passerellidae",""],["Golden-crowned Sparrow","Passerellidae","*"],["Harris's Sparrow","Passerellidae",""],["White-throated Sparrow","Passerellidae",""],["Sagebrush Sparrow","Passerellidae",""],["Vesper Sparrow","Passerellidae",""],["LeConte's Sparrow","Passerellidae",""],["Seaside Sparrow","Passerellidae",""],["Nelson's Sparrow","Passerellidae",""],["Baird's Sparrow","Passerellidae",""],["Henslow's Sparrow","Passerellidae",""],["Savannah Sparrow","Passerellidae",""],["Song Sparrow","Passerellidae",""],["Lincoln's Sparrow","Passerellidae",""],["Swamp Sparrow","Passerellidae",""],["Canyon Towhee","Passerellidae",""],["Abert's Towhee","Passerellidae","H**"],["Rufous-crowned Sparrow","Passerellidae",""],["Green-tailed Towhee","Passerellidae",""],["Spotted Towhee","Passerellidae",""],["Eastern Towhee","Passerellidae",""],["Yellow-breasted Chat","Icteriidae",""],["Yellow-headed Blackbird","Icteridae",""],["Bobolink","Icteridae",""],["Chihuahuan Meadowlark","Icteridae",""],["Eastern Meadowlark","Icteridae",""],["Western Meadowlark","Icteridae",""],["Black-vented Oriole","Icteridae","*"],["Orchard Oriole","Icteridae",""],["Hooded Oriole","Icteridae",""],["Streak-backed Oriole","Icteridae","A*"],["Bullock's Oriole","Icteridae",""],["Altamira Oriole","Icteridae",""],["Audubon's Oriole","Icteridae",""],["Baltimore Oriole","Icteridae",""],["Scott's Oriole","Icteridae",""],["Red-winged Blackbird","Icteridae",""],["Shiny Cowbird","Icteridae","*"],["Bronzed Cowbird","Icteridae",""],["Brown-headed Cowbird","Icteridae",""],["Rusty Blackbird","Icteridae",""],["Brewer's Blackbird","Icteridae",""],["Common Grackle","Icteridae",""],["Boat-tailed Grackle","Icteridae",""],["Great-tailed Grackle","Icteridae",""],["Ovenbird","Parulidae",""],["Worm-eating Warbler","Parulidae",""],["Louisiana Waterthrush","Parulidae",""],["Northern Waterthrush","Parulidae",""],["Bachman's Warbler","Parulidae","H/X"],["Golden-winged Warbler","Parulidae",""],["Blue-winged Warbler","Parulidae",""],["Black-and-white Warbler","Parulidae",""],["Prothonotary Warbler","Parulidae",""],["Swainson's Warbler","Parulidae",""],["Crescent-chested Warbler","Parulidae","A*"],["Tennessee Warbler","Parulidae",""],["Orange-crowned Warbler","Parulidae",""],["Colima Warbler","Parulidae",""],["Lucy's Warbler","Parulidae",""],["Nashville Warbler","Parulidae",""],["Virginia's Warbler","Parulidae",""],["Connecticut Warbler","Parulidae","*"],["Gray-crowned Yellowthroat","Parulidae","*"],["MacGillivray's Warbler","Parulidae",""],["Mourning Warbler","Parulidae",""],["Kentucky Warbler","Parulidae",""],["Common Yellowthroat","Parulidae",""],["Hooded Warbler","Parulidae",""],["American Redstart","Parulidae",""],["Cape May Warbler","Parulidae",""],["Cerulean Warbler","Parulidae",""],["Northern Parula","Parulidae",""],["Tropical Parula","Parulidae",""],["Magnolia Warbler","Parulidae",""],["Bay-breasted Warbler","Parulidae",""],["Blackburnian Warbler","Parulidae",""],["Northern Yellow Warbler","Parulidae",""],["Mangrove Yellow Warbler","Parulidae",""],["Chestnut-sided Warbler","Parulidae",""],["Blackpoll Warbler","Parulidae",""],["Black-throated Blue Warbler","Parulidae",""],["Palm Warbler","Parulidae",""],["Pine Warbler","Parulidae",""],["Yellow-rumped Warbler","Parulidae",""],["Yellow-throated Warbler","Parulidae",""],["Prairie Warbler","Parulidae",""],["Grace's Warbler","Parulidae",""],["Black-throated Gray Warbler","Parulidae",""],["Townsend's Warbler","Parulidae",""],["Hermit Warbler","Parulidae",""],["Golden-cheeked Warbler","Parulidae",""],["Black-throated Green Warbler","Parulidae",""],["Fan-tailed Warbler","Parulidae","A*"],["Rufous-capped Warbler","Parulidae","*"],["Golden-crowned Warbler","Parulidae","*"],["Canada Warbler","Parulidae",""],["Wilson's Warbler","Parulidae",""],["Red-faced Warbler","Parulidae",""],["Painted Whitestart","Parulidae",""],["Slate-throated Redstart","Parulidae","*"],["Hepatic Tanager","Cardinalidae",""],["Summer Tanager","Cardinalidae",""],["Scarlet Tanager","Cardinalidae",""],["Western Tanager","Cardinalidae",""],["Flame-colored Tanager","Cardinalidae","*"],["Crimson-collared Grosbeak","Cardinalidae","*"],["Northern Cardinal","Cardinalidae",""],["Pyrrhuloxia","Cardinalidae",""],["Yellow Grosbeak","Cardinalidae","A*"],["Rose-breasted Grosbeak","Cardinalidae",""],["Black-headed Grosbeak","Cardinalidae",""],["Blue Bunting","Cardinalidae","*"],["Blue Grosbeak","Cardinalidae",""],["Lazuli Bunting","Cardinalidae",""],["Indigo Bunting","Cardinalidae",""],["Varied Bunting","Cardinalidae",""],["Painted Bunting","Cardinalidae",""],["Dickcissel","Cardinalidae",""],["Red-legged Honeycreeper","Thraupidae","A*"],["Yellow-faced Grassquit","Thraupidae","*"],["Morelet's Seedeater","Thraupidae",""]]
+;
+const ALIASES = {
+  "whimbrel":"hudsonian whimbrel",
+  "yellow warbler":"northern yellow warbler",
+  "herring gull":"american herring gull",
+  "warbling vireo":"eastern warbling vireo",
+  "western scrub jay":"woodhouses scrub jay",
+  "mew gull":"short billed gull",
+  "cordilleran flycatcher":"western flycatcher",
+  "pacific slope flycatcher":"western flycatcher",
+  "sage sparrow":"sagebrush sparrow",
+  "mccowns longspur":"thick billed longspur",
+  "common redpoll":"redpoll",
+  "hoary redpoll":"redpoll",
+  "clay colored robin":"clay colored thrush",
+  "white throated robin":"white throated thrush",
+  "magnificent hummingbird":"rivolis hummingbird",
+  "green violetear":"mexican violetear",
+  "blue throated hummingbird":"blue throated mountain gem",
+  "red crowned parrot":"red crowned amazon",
+  "red lored parrot":"red lored amazon",
+  "yellow headed parrot":"yellow headed amazon",
+  "nelsons sharp tailed sparrow":"nelsons sparrow",
+  "cattle egret":"western cattle egret",
+  "ringed turtle dove":"african collared dove",
+  "northern goshawk":"american goshawk",
+  "thayers gull":"iceland gull",
+  "black brant":"brant",
+};
+
+
+function normalize(s){
+  if(!s) return "";
+  return s
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .replace(/['’‘`]/g,"")
+    .replace(/[\/\-–—]/g," ")
+    .replace(/\([^)]*\)/g," ")
+    .replace(/[^a-z0-9 ]/g," ")
+    .replace(/\s+/g," ")
+    .trim();
+}
+
+// SPECIES entries: [commonName, family, code, note]
+const SPECIES_NORM = SPECIES.map(([name, family, code, note]) => ({
+  name, family, code, note,
+  norm: normalize(name),
+  familyNorm: normalize(family),
+}));
+
+let userNames = new Set();
+let hasResults = false;
+let statFilter = null; // null | 'REVIEWLIST' | 'ACCIDENTAL' | 'PRESUMPTIVE' | 'GOT' | 'NEED' — set by tapping a stat card
+let collapsedFamilies = new Set(); // family names collapsed by the user this session
+let flashNorm = null; // norm of the row to briefly flash after a manual tap
+let sessionBaseline = null; // Set of norms "have" at the start of this session, for the session-added counter
+
+const drop = document.getElementById('drop');
+const fileInput = document.getElementById('fileInput');
+const filenameBox = document.getElementById('filenameBox');
+const filenameText = document.getElementById('filenameText');
+const clearFileBtn = document.getElementById('clearFile');
+const errorBox = document.getElementById('errorBox');
+const resultsSection = document.getElementById('resultsSection');
+
+function showError(msg){
+  errorBox.style.display = 'block';
+  errorBox.textContent = msg;
+}
+function clearError(){
+  errorBox.style.display = 'none';
+  errorBox.textContent = '';
+}
+
+['dragenter','dragover'].forEach(ev=>{
+  drop.addEventListener(ev, e=>{ e.preventDefault(); drop.classList.add('drag'); });
+});
+['dragleave','drop'].forEach(ev=>{
+  drop.addEventListener(ev, e=>{ e.preventDefault(); drop.classList.remove('drag'); });
+});
+drop.addEventListener('drop', e=>{
+  const f = e.dataTransfer.files[0];
+  if(f) handleFile(f);
+});
+fileInput.addEventListener('change', e=>{
+  const f = e.target.files[0];
+  if(f) handleFile(f);
+});
+clearFileBtn.addEventListener('click', ()=>{ resetAll(); });
+
+const STORAGE_KEY = 'txBirdsINeed_savedFile';
+let lastCleared = null;
+let undoTimer = null;
+
+function resetAll(){
+  let snapshot = null;
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw) snapshot = JSON.parse(raw);
+  }catch(e){}
+  lastCleared = (snapshot && Array.isArray(snapshot.names) && snapshot.names.length) ? snapshot : null;
+
+  userNames = new Set();
+  hasResults = false;
+  fileInput.value = '';
+  filenameBox.style.display = 'none';
+  resultsSection.style.display = 'none';
+  clearError();
+  try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
+
+  const banner = document.getElementById('undoBanner');
+  if(lastCleared){
+    banner.style.display = 'block';
+    clearTimeout(undoTimer);
+    undoTimer = setTimeout(()=>{ banner.style.display = 'none'; lastCleared = null; }, 6000);
+  } else {
+    banner.style.display = 'none';
+  }
+}
+document.getElementById('resetBtn').addEventListener('click', resetAll);
+
+document.getElementById('undoBtn').addEventListener('click', ()=>{
+  if(!lastCleared) return;
+  clearTimeout(undoTimer);
+  document.getElementById('undoBanner').style.display = 'none';
+  const dateStr = formatSavedDate(lastCleared.savedAt);
+  filenameText.textContent = lastCleared.fileName + (dateStr ? ` (uploaded ${dateStr})` : '');
+  filenameBox.style.display = 'flex';
+  finishUpload(lastCleared.names, {fileName: lastCleared.fileName, skipScroll:true});
+  lastCleared = null;
+});
+
+function saveToStorage(fileName, names){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({fileName, names, savedAt: Date.now()}));
+  }catch(e){ }
+}
+
+function formatSavedDate(ts){
+  if(!ts) return '';
+  const d = new Date(ts);
+  return d.toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'});
+}
+
+function tryRestoreFromStorage(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return;
+    const data = JSON.parse(raw);
+    if(!data || !Array.isArray(data.names) || !data.names.length) return;
+    const dateStr = formatSavedDate(data.savedAt);
+    filenameText.textContent = data.fileName + (dateStr ? ` (uploaded ${dateStr})` : ' (restored)');
+    filenameBox.style.display = 'flex';
+    finishUpload(data.names, {skipSave:true, skipScroll:true});
+  }catch(e){ }
+}
+
+function parseCSVText(text){
+  if(text.charCodeAt(0) === 0xFEFF) text = text.slice(1); // strip UTF-8 BOM
+  const rows = [];
+  let row = [];
+  let field = '';
+  let inQuotes = false;
+  for(let i=0;i<text.length;i++){
+    const c = text[i];
+    if(inQuotes){
+      if(c === '"'){
+        if(text[i+1] === '"'){ field += '"'; i++; }
+        else { inQuotes = false; }
+      } else {
+        field += c;
+      }
+    } else {
+      if(c === '"'){ inQuotes = true; }
+      else if(c === ','){ row.push(field); field=''; }
+      else if(c === '\r'){ }
+      else if(c === '\n'){ row.push(field); rows.push(row); row=[]; field=''; }
+      else { field += c; }
+    }
+  }
+  if(field.length || row.length){ row.push(field); rows.push(row); }
+  return rows.filter(r => r.length > 1 || (r.length===1 && r[0].trim() !== ''));
+}
+
+function extractCommonNames(rows){
+  if(!rows.length) return [];
+  const header = rows[0].map(h => (h||'').toString().trim().toLowerCase());
+  let idx = header.findIndex(h => h === 'common name');
+  if(idx === -1) idx = header.findIndex(h => h.includes('common name'));
+  if(idx === -1) idx = header.findIndex(h => h.includes('species'));
+  if(idx === -1) throw new Error('Could not find a "Common Name" column in this file.');
+  const names = [];
+  for(let i=1;i<rows.length;i++){
+    const v = rows[i][idx];
+    if(v && v.toString().trim()) names.push(v.toString().trim());
+  }
+  return names;
+}
+
+function buildUserSet(names){
+  const set = new Set();
+  names.forEach(n=>{
+    let norm = normalize(n);
+    if(ALIASES[norm]) norm = ALIASES[norm];
+    set.add(norm);
+  });
+  return set;
+}
+
+function handleFile(file){
+  clearError();
+  const name = file.name.toLowerCase();
+  filenameText.textContent = file.name;
+  filenameBox.style.display = 'flex';
+
+  if(name.endsWith('.csv') || name.endsWith('.txt')){
+    const reader = new FileReader();
+    reader.onload = e => {
+      try{
+        const rows = parseCSVText(e.target.result);
+        const names = extractCommonNames(rows);
+        finishUpload(names, {fileName: file.name});
+      }catch(err){
+        showError(err.message || 'Could not read that file.');
+      }
+    };
+    reader.onerror = () => showError('Could not read that file.');
+    reader.readAsText(file);
+  } else if(name.endsWith('.xlsx') || name.endsWith('.xls')){
+    const reader = new FileReader();
+    reader.onload = e => {
+      try{
+        const data = new Uint8Array(e.target.result);
+        const wb = XLSX.read(data, {type:'array'});
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet, {header:1, defval:''});
+        const names = extractCommonNames(rows);
+        finishUpload(names, {fileName: file.name});
+      }catch(err){
+        showError(err.message || 'Could not read that spreadsheet.');
+      }
+    };
+    reader.onerror = () => showError('Could not read that file.');
+    reader.readAsArrayBuffer(file);
+  } else {
+    showError('Please upload a .csv, .xlsx, or .xls file.');
+  }
+}
+
+function finishUpload(names, opts){
+  opts = opts || {};
+  if(!names.length){
+    showError('No species names were found in that file.');
+    return;
+  }
+  userNames = buildUserSet(names);
+  hasResults = true;
+  resultsSection.style.display = 'block';
+  if(sessionBaseline === null){
+    sessionBaseline = new Set(SPECIES_NORM.filter(sp => speciesHas(sp)).map(sp => sp.norm));
+  }
+  render();
+  if(!opts.skipSave){
+    saveToStorage(opts.fileName || 'your file', names);
+  }
+  if(!opts.skipScroll){
+    resultsSection.scrollIntoView({behavior:'smooth', block:'start'});
+  }
+}
+
+const NOTES_KEY = 'txBirdsINeed_generalNotes';
+const generalNotesEl = document.getElementById('generalNotes');
+try{
+  const savedNotes = localStorage.getItem(NOTES_KEY);
+  if(savedNotes) generalNotesEl.value = savedNotes;
+}catch(e){}
+let notesSaveTimer = null;
+generalNotesEl.addEventListener('input', ()=>{
+  clearTimeout(notesSaveTimer);
+  notesSaveTimer = setTimeout(()=>{
+    try{ localStorage.setItem(NOTES_KEY, generalNotesEl.value); }catch(e){}
+  }, 400);
+});
+
+const OVERRIDE_KEY = 'txBirdsINeed_manualOverrides';
+let manualOverrides = {};
+try{
+  const raw = localStorage.getItem(OVERRIDE_KEY);
+  if(raw) manualOverrides = JSON.parse(raw) || {};
+}catch(e){}
+
+function saveOverrides(){
+  try{ localStorage.setItem(OVERRIDE_KEY, JSON.stringify(manualOverrides)); }catch(e){}
+}
+
+document.getElementById('clearMarksBtn').addEventListener('click', ()=>{
+  const count = Object.keys(manualOverrides).length;
+  if(count === 0) return;
+  if(!confirm(`Clear ${count} manual mark${count===1?'':'s'}? This won't touch your uploaded file.`)) return;
+  manualOverrides = {};
+  saveOverrides();
+  render();
+});
+
+function fileHas(norm){
+  return userNames.has(norm) || (ALIASES[norm] && userNames.has(ALIASES[norm]));
+}
+
+function speciesHas(sp){
+  return fileHas(sp.norm) || manualOverrides[sp.norm] === true;
+}
+
+function toggleManualMark(norm){
+  if(fileHas(norm)) return; // already reflected by your uploaded file — nothing to toggle
+  if(manualOverrides[norm]) delete manualOverrides[norm];
+  else manualOverrides[norm] = true;
+  saveOverrides();
+  render();
+}
+
+function isRareStatus(code){
+  return code.indexOf('X') !== -1 || code.indexOf('H') !== -1;
+}
+function isAccidental(code){
+  return code.indexOf('A') !== -1;
+}
+function isPresumptive(code){
+  return code.indexOf('P') !== -1;
+}
+function isReviewListOnly(code){
+  const letters = code.replace(/\*/g,'');
+  return code.indexOf('*') !== -1 && letters === '';
+}
+
+function statusLabel(code){
+  if(!code) return null;
+  const map = {
+    'A':'Accidental','P':'Presumptive','I':'Introduced','M':'Mixed origin',
+    'R':'Released','X':'Extinct','H':'Historical'
+  };
+  const letters = code.replace(/\*/g,'');
+  const parts = letters.split('/').map(l=>map[l]).filter(Boolean);
+  if(!parts.length){
+    if(code.indexOf('*') !== -1) return 'Review List';
+    return null;
+  }
+  return parts.join(' / ');
+}
+
+function aabSlug(name){
+  return name
+    .replace(/['’]/g, '')
+    .trim()
+    .replace(/\s+/g, '_');
+}
+
+function tagClass(code){
+  if(!code) return '';
+  if(code.indexOf('X') !== -1 || code.indexOf('H') !== -1) return 'tag-historical';
+  if(code.indexOf('A') !== -1) return 'tag-accidental';
+  if(code.indexOf('P') !== -1) return 'tag-presumptive';
+  if(code.indexOf('I') !== -1 || code.indexOf('M') !== -1 || code.indexOf('R') !== -1) return 'tag-introduced';
+  if(code.indexOf('*') !== -1) return 'tag-review';
+  return '';
+}
+
+function speciesRowHTML(r, showFamily){
+  const label = statusLabel(r.code);
+  const cls = tagClass(r.code);
+  const rangeUrl = "https://www.allaboutbirds.org/guide/" + aabSlug(r.name);
+  const isOverridden = manualOverrides[r.norm] === true && !userNames.has(r.norm);
+  const flashCls = (r.norm === flashNorm) ? 'flash' : '';
+  return `<div class="species-row ${r.have ? 'have':''} ${flashCls}" data-norm="${r.norm.replace(/"/g,'&quot;')}" style="cursor:pointer;" ${r.note ? `title="${r.note}"` : ''}>
+    <span class="box"></span>
+    <span class="name">${r.name}${isOverridden ? ' <span style="opacity:.55;" title="Manually marked">✎</span>' : ''}</span>
+    ${showFamily ? `<span class="tag" style="border-color:transparent;">${r.family}</span>` : ''}
+    ${label ? `<span class="tag ${cls}">${label}</span>` : ''}
+    <a class="range-link" href="${rangeUrl}" target="_blank" rel="noopener">Range ↗</a>
+    <button class="share-single" type="button" data-norm="${r.norm.replace(/"/g,'&quot;')}" aria-label="Share this species" title="Share this species">⇪</button>
+  </div>`;
+}
+
+const searchBox = document.getElementById('searchBox');
+const searchClear = document.getElementById('searchClear');
+function updateSearchClearVisibility(){
+  searchClear.classList.toggle('show', searchBox.value.length > 0);
+}
+searchBox.addEventListener('input', updateSearchClearVisibility);
+searchClear.addEventListener('click', ()=>{
+  searchBox.value = '';
+  updateSearchClearVisibility();
+  searchBox.focus();
+  render();
+  renderSearchHistory();
+});
+
+const SEARCH_HISTORY_KEY = 'txBirdsINeed_searchHistory';
+function loadSearchHistory(){
+  try{
+    const raw = localStorage.getItem(SEARCH_HISTORY_KEY);
+    return raw ? JSON.parse(raw) : [];
+  }catch(e){ return []; }
+}
+function saveSearchHistory(arr){
+  try{ localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(arr)); }catch(e){}
+}
+function addToSearchHistory(term){
+  term = term.trim();
+  if(!term) return;
+  let hist = loadSearchHistory();
+  hist = hist.filter(t => t.toLowerCase() !== term.toLowerCase());
+  hist.unshift(term);
+  hist = hist.slice(0, 4);
+  saveSearchHistory(hist);
+  renderSearchHistory();
+}
+function renderSearchHistory(){
+  const row = document.getElementById('searchHistoryRow');
+  const hist = loadSearchHistory();
+  if(!hist.length || searchBox.value.trim()){
+    row.style.display = 'none';
+    return;
+  }
+  row.innerHTML = hist.map(t => `<button class="search-history-pill" type="button">${t}</button>`).join('');
+  row.style.display = 'flex';
+  [...row.querySelectorAll('.search-history-pill')].forEach((btn, i)=>{
+    btn.addEventListener('click', ()=>{
+      searchBox.value = hist[i];
+      updateSearchClearVisibility();
+      render();
+      renderSearchHistory();
+      searchBox.focus();
+    });
+  });
+}
+searchBox.addEventListener('change', ()=> addToSearchHistory(searchBox.value));
+searchBox.addEventListener('focus', renderSearchHistory);
+searchBox.addEventListener('input', ()=>{
+  if(searchBox.value.trim()) document.getElementById('searchHistoryRow').style.display = 'none';
+  else renderSearchHistory();
+});
+searchBox.addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter'){
+    e.preventDefault();
+    addToSearchHistory(searchBox.value);
+    const firstRow = document.querySelector('#listArea .species-row');
+    if(firstRow) firstRow.scrollIntoView({behavior:'smooth', block:'center'});
+  }
+});
+renderSearchHistory();
+
+const THEME_KEY = 'txBirdsINeed_theme';
+const themeToggle = document.getElementById('themeToggle');
+function currentThemeLabel(){
+  const t = document.documentElement.getAttribute('data-theme');
+  return t === 'dark' ? 'Dark' : t === 'light' ? 'Light' : 'System';
+}
+themeToggle.textContent = currentThemeLabel();
+themeToggle.addEventListener('click', ()=>{
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = (!cur) ? 'light' : (cur === 'light') ? 'dark' : '';
+  if(next === ''){
+    document.documentElement.removeAttribute('data-theme');
+    try{ localStorage.removeItem(THEME_KEY); }catch(e){}
+  } else {
+    document.documentElement.setAttribute('data-theme', next);
+    try{ localStorage.setItem(THEME_KEY, next); }catch(e){}
+  }
+  themeToggle.textContent = currentThemeLabel();
+});
+
+document.getElementById('familyJump').addEventListener('change', (e)=>{
+  const fam = e.target.value;
+  if(!fam) return;
+  const anchorId = 'fam-' + fam.replace(/[^a-zA-Z0-9]/g,'');
+  const el = document.getElementById(anchorId);
+  if(el){
+    if(collapsedFamilies.has(fam)){ collapsedFamilies.delete(fam); render(); }
+    document.getElementById(anchorId).scrollIntoView({behavior:'smooth', block:'start'});
+  }
+  e.target.value = '';
+});
+
+async function shareSingleSpecies(norm){
+  const sp = SPECIES_NORM.find(s => s.norm === norm);
+  if(!sp) return;
+  const label = statusLabel(sp.code);
+  const rangeUrl = "https://www.allaboutbirds.org/guide/" + aabSlug(sp.name);
+  const text = `${sp.name}${label ? ' (' + label + ')' : ''} — ${rangeUrl}`;
+  if(navigator.share){
+    try{ await navigator.share({ title: sp.name, text }); return; }catch(e){ /* fall through to clipboard */ }
+  }
+  try{ await navigator.clipboard.writeText(text); }catch(e){ alert(text); }
+}
+
+document.getElementById('listArea').addEventListener('click', (e)=>{
+  if(e.target.closest('.range-link')) return; // let the range link navigate normally
+
+  const shareBtnEl = e.target.closest('.share-single');
+  if(shareBtnEl){
+    const norm = shareBtnEl.getAttribute('data-norm');
+    if(norm) shareSingleSpecies(norm);
+    return;
+  }
+
+  const row = e.target.closest('.species-row');
+  if(row){
+    const norm = row.getAttribute('data-norm');
+    if(norm){
+      flashNorm = norm;
+      toggleManualMark(norm);
+    }
+    return;
+  }
+
+  const title = e.target.closest('.family-title');
+  if(!title) return;
+  const fam = title.getAttribute('data-family');
+  if(!fam) return; // e.g. the "A–Z" pseudo-group in alphabetical mode has no data-family
+  if(collapsedFamilies.has(fam)) collapsedFamilies.delete(fam);
+  else collapsedFamilies.add(fam);
+  render();
+});
+const toggleRare = document.getElementById('toggleRare');
+const toggleHideAccidental = document.getElementById('toggleHideAccidental');
+const toggleHidePresumptive = document.getElementById('toggleHidePresumptive');
+const sortMode = document.getElementById('sortMode');
+[searchBox].forEach(el=> el.addEventListener('input', render));
+const TOGGLE_KEY = 'txBirdsINeed_toggles';
+
+function saveToggles(){
+  try{
+    localStorage.setItem(TOGGLE_KEY, JSON.stringify({
+      showRare: toggleRare.checked,
+      hideAccidental: toggleHideAccidental.checked,
+      hidePresumptive: toggleHidePresumptive.checked,
+      sort: sortMode.value,
+    }));
+  }catch(e){ }
+}
+
+function restoreToggles(){
+  try{
+    const raw = localStorage.getItem(TOGGLE_KEY);
+    if(!raw) return;
+    const t = JSON.parse(raw);
+    if(typeof t.showRare === 'boolean') toggleRare.checked = t.showRare;
+    if(typeof t.hideAccidental === 'boolean') toggleHideAccidental.checked = t.hideAccidental;
+    if(typeof t.hidePresumptive === 'boolean') toggleHidePresumptive.checked = t.hidePresumptive;
+    if(t.sort) sortMode.value = t.sort;
+  }catch(e){ }
+}
+restoreToggles();
+tryRestoreFromStorage();
+
+[toggleRare, toggleHideAccidental, toggleHidePresumptive, sortMode].forEach(el=> el.addEventListener('change', ()=>{ saveToggles(); render(); }));
+
+function toggleStatFilter(key){
+  if(key === 'TOTAL'){
+    statFilter = null;
+  } else {
+    statFilter = (statFilter === key) ? null : key;
+  }
+  render();
+  if(statFilter){
+    document.getElementById('listArea').scrollIntoView({behavior:'smooth', block:'start'});
+  }
+}
+document.getElementById('cardGot').addEventListener('click', ()=> toggleStatFilter('GOT'));
+document.getElementById('cardNeed').addEventListener('click', ()=> toggleStatFilter('NEED'));
+document.getElementById('cardTotal').addEventListener('click', ()=> toggleStatFilter('TOTAL'));
+document.getElementById('cardReviewList').addEventListener('click', ()=> toggleStatFilter('REVIEWLIST'));
+document.getElementById('cardAccidental').addEventListener('click', ()=> toggleStatFilter('ACCIDENTAL'));
+document.getElementById('cardPresumptive').addEventListener('click', ()=> toggleStatFilter('PRESUMPTIVE'));
+
+function render(){
+  if(!hasResults) return;
+  const q = normalize(searchBox.value);
+  const showRare = toggleRare.checked;
+  const hideAccidental = toggleHideAccidental.checked;
+  const hidePresumptive = toggleHidePresumptive.checked;
+  const alpha = sortMode.value === 'alpha';
+
+  let got = 0, need = 0, reviewListSeen = 0, accidentalSeen = 0, presumptiveSeen = 0;
+  const byFamily = {};
+  const flat = [];
+
+  SPECIES_NORM.forEach(sp=>{
+    const have = speciesHas(sp);
+    if(have && isReviewListOnly(sp.code)) reviewListSeen++;
+    if(have && isAccidental(sp.code)) accidentalSeen++;
+    if(have && isPresumptive(sp.code)) presumptiveSeen++;
+    if(!showRare && isRareStatus(sp.code) && !have) return;
+    if(hideAccidental && isAccidental(sp.code) && !have) return;
+    if(hidePresumptive && isPresumptive(sp.code) && !have) return;
+    if(have) got++; else need++;
+    if(q && !sp.norm.includes(q) && !sp.familyNorm.includes(q)) return;
+    const row = {...sp, have};
+    flat.push(row);
+    if(!byFamily[sp.family]) byFamily[sp.family] = [];
+    byFamily[sp.family].push(row);
+  });
+
+  document.getElementById('statGot').textContent = got;
+  document.getElementById('statNeed').textContent = need;
+  document.getElementById('statTotal').textContent = got + need;
+
+  const pct = (got + need) > 0 ? Math.round((got / (got + need)) * 100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = `${pct}% complete — ${got} of ${got + need}`;
+
+  const sessionAddedEl = document.getElementById('sessionAddedLabel');
+  if(sessionBaseline){
+    const addedCount = SPECIES_NORM.filter(sp => speciesHas(sp) && !sessionBaseline.has(sp.norm)).length;
+    if(addedCount > 0){
+      sessionAddedEl.textContent = `+${addedCount} species this session`;
+      sessionAddedEl.style.display = 'block';
+    } else {
+      sessionAddedEl.style.display = 'none';
+    }
+  } else {
+    sessionAddedEl.style.display = 'none';
+  }
+  document.getElementById('statReviewList').textContent = reviewListSeen;
+  document.getElementById('statAccidental').textContent = accidentalSeen;
+  document.getElementById('statPresumptive').textContent = presumptiveSeen;
+
+  ['cardGot','cardNeed','cardTotal','cardReviewList','cardAccidental','cardPresumptive'].forEach(id=>{
+    document.getElementById(id).classList.remove('stat-active');
+    document.getElementById(id).style.outline = 'none';
+  });
+  if(!statFilter){
+    document.getElementById('cardTotal').classList.add('stat-active');
+  }
+
+  const listArea = document.getElementById('listArea');
+
+  if(statFilter){
+    let matches, labelText, cardId, groupByFamily = false;
+
+    if(statFilter === 'GOT'){
+      labelText = 'Recorded';
+      cardId = 'cardGot';
+      groupByFamily = true;
+      matches = SPECIES_NORM.filter(sp => speciesHas(sp))
+        .map(sp => ({...sp, have:true}));
+    } else if(statFilter === 'NEED'){
+      labelText = 'Still need';
+      cardId = 'cardNeed';
+      groupByFamily = true;
+      matches = SPECIES_NORM.filter(sp=>{
+        if(speciesHas(sp)) return false;
+        if(!showRare && isRareStatus(sp.code)) return false;
+        if(hideAccidental && isAccidental(sp.code)) return false;
+        if(hidePresumptive && isPresumptive(sp.code)) return false;
+        return true;
+      }).map(sp => ({...sp, have:false}));
+    } else {
+      const predicate = statFilter === 'REVIEWLIST' ? isReviewListOnly : statFilter === 'ACCIDENTAL' ? isAccidental : isPresumptive;
+      labelText = statFilter === 'REVIEWLIST' ? 'Review List' : statFilter === 'ACCIDENTAL' ? 'Accidental' : 'Presumptive';
+      cardId = statFilter === 'REVIEWLIST' ? 'cardReviewList' : statFilter === 'ACCIDENTAL' ? 'cardAccidental' : 'cardPresumptive';
+      matches = SPECIES_NORM.filter(sp => speciesHas(sp) && predicate(sp.code))
+        .map(sp => ({...sp, have:true}));
+    }
+    if(alpha) groupByFamily = false;
+    if(q) matches = matches.filter(sp => sp.norm.includes(q) || sp.familyNorm.includes(q));
+
+    document.getElementById(cardId).classList.add('stat-active');
+
+    const heading = statFilter === 'GOT' ? 'Species recorded'
+      : statFilter === 'NEED' ? 'Species still needed'
+      : `${labelText} species you've seen`;
+    const emptyMsg = q ? 'No species match that search.'
+      : statFilter === 'NEED'
+      ? 'Nothing left — you\'ve got them all (given current filters).'
+      : statFilter === 'GOT'
+      ? 'Nothing recorded yet.'
+      : 'None yet — nothing in this category on your list.';
+
+    let html = '';
+    if(!matches.length){
+      html = `<div class="family-group">
+        <div class="family-title"><span>${heading}</span><span class="count">0</span></div>
+        <div class="empty-state">${emptyMsg}</div>
+      </div>`;
+    } else if(groupByFamily){
+      const groupFamilies = {};
+      matches.forEach(r=>{
+        if(!groupFamilies[r.family]) groupFamilies[r.family] = [];
+        groupFamilies[r.family].push(r);
+      });
+      html += `<div class="family-group" style="margin-bottom:.3rem;">
+        <div class="family-title" style="cursor:default; border-bottom:none;"><span>${heading}</span><span class="count">${matches.length}</span></div>
+      </div>`;
+      Object.keys(groupFamilies).forEach(fam=>{
+        const rows = groupFamilies[fam];
+        const isCollapsed = collapsedFamilies.has(fam);
+        html += `<div class="family-group ${isCollapsed ? "collapsed" : ""}">
+          <div class="family-title" data-family="${fam.replace(/"/g,"&quot;")}"><span>${isCollapsed ? "▸" : "▾"} ${fam}</span><span class="count">${rows.length}</span></div>`;
+        rows.forEach(r=> html += speciesRowHTML(r, false));
+        html += `</div>`;
+      });
+    } else {
+      matches = matches.sort((a,b)=> a.name.localeCompare(b.name));
+      html = `<div class="family-group">
+        <div class="family-title"><span>${heading}</span><span class="count">${matches.length}</span></div>`;
+      matches.forEach(r=> html += speciesRowHTML(r, true));
+      html += `</div>`;
+    }
+    html += `<div class="reset-row"><button onclick="toggleStatFilter('${statFilter}')">← Back to full list</button></div>`;
+    listArea.innerHTML = html;
+    flashNorm = null;
+    return;
+  }
+
+  if(!flat.length){
+    listArea.innerHTML = '<div class="empty-state">No species match that search.</div>';
+    return;
+  }
+
+  let html = '';
+  const familyJumpSelect = document.getElementById('familyJump');
+  if(alpha){
+    familyJumpSelect.style.display = 'none';
+    const sorted = flat.slice().sort((a,b)=> a.name.localeCompare(b.name));
+    html += `<div class="family-group">
+      <div class="family-title"><span>A–Z</span><span class="count">${sorted.length}</span></div>`;
+    sorted.forEach(r=> html += speciesRowHTML(r, true));
+    html += `</div>`;
+  } else {
+    familyJumpSelect.style.display = '';
+    const familyNames = Object.keys(byFamily);
+    const prevSelection = familyJumpSelect.value;
+    familyJumpSelect.innerHTML = '<option value="">Jump to family…</option>' +
+      familyNames.map(f => `<option value="${f.replace(/"/g,'&quot;')}">${f}</option>`).join('');
+    if(familyNames.includes(prevSelection)) familyJumpSelect.value = prevSelection;
+
+    familyNames.forEach(fam=>{
+      const rows = byFamily[fam];
+      const isCollapsed = collapsedFamilies.has(fam);
+      const anchorId = 'fam-' + fam.replace(/[^a-zA-Z0-9]/g,'');
+      html += `<div class="family-group ${isCollapsed ? 'collapsed' : ''}" id="${anchorId}">
+        <div class="family-title" data-family="${fam.replace(/"/g,'&quot;')}"><span>${isCollapsed ? '▸' : '▾'} ${fam}</span><span class="count">${rows.length}</span></div>`;
+      rows.forEach(r=> html += speciesRowHTML(r, false));
+      html += `</div>`;
+    });
+  }
+  listArea.innerHTML = html;
+  flashNorm = null;
+}
+
+function rarityRank(code){
+  if(!code) return 0;
+  if(code.indexOf('I') !== -1 || code.indexOf('M') !== -1 || code.indexOf('R') !== -1) return 1;
+  if(isReviewListOnly(code)) return 2;
+  if(isAccidental(code)) return 3;
+  if(isPresumptive(code)) return 4;
+  if(isRareStatus(code)) return 5;
+  return 6;
+}
+
+function buildNeedsListText(){
+  const byFamily = {};
+  let total = 0;
+  SPECIES_NORM.forEach(sp=>{
+    const have = speciesHas(sp);
+    if(have) return;
+    if(!toggleRare.checked && isRareStatus(sp.code)) return;
+    if(toggleHideAccidental.checked && isAccidental(sp.code)) return;
+    if(toggleHidePresumptive.checked && isPresumptive(sp.code)) return;
+    if(!byFamily[sp.family]) byFamily[sp.family] = [];
+    byFamily[sp.family].push(sp);
+    total++;
+  });
+
+  const lines = [];
+  Object.keys(byFamily).forEach(fam=>{
+    const group = byFamily[fam].slice().sort((a,b)=>{
+      const ra = rarityRank(a.code), rb = rarityRank(b.code);
+      if(ra !== rb) return ra - rb;
+      return a.name.localeCompare(b.name);
+    });
+    lines.push(fam.toUpperCase());
+    group.forEach(sp=>{
+      const label = statusLabel(sp.code);
+      lines.push(label ? `${sp.name} (${label})` : sp.name);
+    });
+    lines.push('');
+  });
+
+  const header = `Texas birds I still need (${total}):`;
+  return header + '\n\n' + lines.join('\n').trim();
+}
+
+function buildFullListText(){
+  const byFamily = {};
+  let gotCount = 0;
+  SPECIES_NORM.forEach(sp=>{
+    if(speciesHas(sp)) gotCount++;
+    if(!byFamily[sp.family]) byFamily[sp.family] = [];
+    byFamily[sp.family].push(sp);
+  });
+
+  const lines = [];
+  Object.keys(byFamily).forEach(fam=>{
+    const group = byFamily[fam].slice().sort((a,b)=>{
+      const ra = rarityRank(a.code), rb = rarityRank(b.code);
+      if(ra !== rb) return ra - rb;
+      return a.name.localeCompare(b.name);
+    });
+    lines.push(fam.toUpperCase());
+    group.forEach(sp=>{
+      const have = speciesHas(sp);
+      const label = statusLabel(sp.code);
+      const mark = have ? '[x]' : '[ ]';
+      const tag = label ? ` (${label})` : '';
+      lines.push(`${mark} ${sp.name}${tag}`);
+    });
+    lines.push('');
+  });
+
+  const header = `Texas birds — full checklist (${gotCount} of ${SPECIES_NORM.length} recorded):`;
+  return header + '\n\n' + lines.join('\n').trim();
+}
+
+const shareBtn = document.getElementById('shareBtn');
+shareBtn.addEventListener('click', async ()=>{
+  if(!hasResults){ return; }
+  const text = buildNeedsListText();
+  if(navigator.share){
+    try{
+      await navigator.share({ title: 'Texas birds I still need', text });
+      return;
+    }catch(e){ }
+  }
+  try{
+    await navigator.clipboard.writeText(text);
+    const original = shareBtn.textContent;
+    shareBtn.textContent = 'Copied to clipboard!';
+    setTimeout(()=>{ shareBtn.textContent = original; }, 2000);
+  }catch(e){
+    alert(text);
+  }
+});
+
+const shareFullBtn = document.getElementById('shareFullBtn');
+shareFullBtn.addEventListener('click', async ()=>{
+  if(!hasResults){ return; }
+  const text = buildFullListText();
+  if(navigator.share){
+    try{
+      await navigator.share({ title: 'Texas birds — full checklist', text });
+      return;
+    }catch(e){ }
+  }
+  try{
+    await navigator.clipboard.writeText(text);
+    const original = shareFullBtn.textContent;
+    shareFullBtn.textContent = 'Copied to clipboard!';
+    setTimeout(()=>{ shareFullBtn.textContent = original; }, 2000);
+  }catch(e){
+    alert(text);
+  }
+});
+</script>
+</body>
+</html>
